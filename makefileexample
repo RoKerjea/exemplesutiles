@@ -1,0 +1,48 @@
+SRCS            = srcs/so_long.c srcs/map_parser.c
+SRCS            := $(SRCS) srcs/getmapinfo.c srcs/keyparser.c srcs/wincloser.c
+SRCS_LIB        = lib/ft_strdup.c lib/ft_strendcmp.c lib/ft_putnbr.c lib/ft_split.c lib/ft_strjoin.c lib/ft_strlen.c lib/ft_strchr.c
+
+SRCS = $(addprefix srcs/, \
+        so_long.c map_parser.c)
+
+HEADER          = include/so_long.h
+RM                      = rm -rf
+NAME            = so_long
+CC                      = gcc
+OBJECTS         = ${SRCS:srcs/%.c=build/%.o}
+OBJECTS_LIB     = ${SRCS_LIB:lib/%.c=build/%.o}
+DEPS            = ${SRCS:srcs/%.c=build/%.d}
+DEPS_LIB        = ${SRCS_LIB:lib/%.c=build/%.d}
+CFLAGS          = -Wall -Werror -Wextra -MMD
+
+LIB             =       -L ./Libft -L ./minilibx-linux -lmlx -lXext -lX11
+
+$(NAME) :       ${OBJECTS} $(OBJECTS_LIB)
+                        make -C minilibx-linux
+                        $(CC) ${CFLAGS} ${OBJECTS} $(OBJECTS_LIB) -o $(NAME) $(LIB)
+
+build/%.o: srcs/%.c
+        mkdir -p build
+        $(CC) $(CFLAGS) -c $< -o $@ -I./include
+
+build/%.o: lib/%.c
+        mkdir -p build
+        $(CC) $(CFLAGS) -c $< -o $@ -I./include
+
+all:            ${NAME}
+
+clean:
+        ${RM} ${OBJECTS} $(OBJECTS_LIB)
+        make -C minilibx-linux clean
+
+fclean:
+        ${RM} ${OBJECTS} $(OBJECTS_LIB)
+        ${RM} ${NAME}
+        make -C minilibx-linux clean
+
+re:                     fclean all
+
+.PHONY:         all clean fclean re
+
+-include $(DEPS) $(DEPS_LIB)
+~                             
