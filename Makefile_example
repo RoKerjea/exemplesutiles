@@ -1,0 +1,182 @@
+# correction TP5 systemes d'exploitation 2003 : partage de fichiers
+CFLAGS= -g -Wall -D_REENTRANT
+
+LDFLAGS=
+
+LIB= -lpthread
+
+CC= gcc $(CFLAGS)
+LD= gcc
+
+# serveur d'annonce
+ASRC=annonce.c \
+    annonce_sha1_f.c \
+    mtfifo.c \
+    critique.c \
+    socket.c \
+    fichier.c \
+    util.c \
+    debit.c \
+    version.c \
+    sha1.c \
+    sha1_f.c
+
+# nommage automatique des fichiers objets d'apres les noms des sources C
+AOBJ= $(ASRC:.c=.o)
+
+# nommage automatique des fichiers de dependance d'apres les noms des sources C
+ADEP= $(ASRC:.c=.d)
+
+# serveur de fichiers
+FSRC=serveur_fichier.c \
+    serveur_fichier_sha1.c \
+    serveur_fichier_sha1_f.c \
+    mtfifo.c \
+    critique.c \
+    socket.c \
+    fichier.c \
+    util.c \
+    debit.c \
+    version.c \
+    sha1.c \
+    sha1_f.c
+   
+# nommage automatique des fichiers objets d'apres les noms des sources C
+FOBJ= $(FSRC:.c=.o)
+
+# nommage automatique des fichiers de dependance d'apres les noms des sources C
+FDEP= $(FSRC:.c=.d)
+
+#client
+CSRC=client_sha1.c \
+    client_sha1_f.c \
+    mtfifo.c \
+    critique.c \
+    socket.c \
+    fichier.c \
+    util.c \
+    debit.c \
+    version.c \
+    sha1.c \
+    sha1_f.c
+
+# nommage automatique des fichiers objets d'apres les noms des sources C
+COBJ= $(CSRC:.c=.o)
+
+# nommage automatique des fichiers de dependance d'apres les noms des sources C
+CDEP= $(CSRC:.c=.d)
+
+# ensemble des fichiers de dependance
+DEP= $(ADEP) $(FDEP) $(CDEP)
+
+
+# numero de version auto
+include build
+
+#
+BIN=annonce  \
+    serveur_fichier \
+    client
+
+#
+VER=annonce.version \
+    serveur_fichier.version \
+    client.version
+   
+   
+.PHONY: all
+all: $(BIN) $(VER) changelog
+
+# numerotation des compilations completes
+build:
+    echo BUILD= 1 > build
+
+rebuild: build
+    @echo BUILD= `expr $(BUILD) + 1` > build
+
+# genere un fichier C avec une chaine de caracteres decrivant la version du projet
+version.c: build
+    @echo "char version_id[]= \"build $(BUILD)\";"  > $@
+
+# conserve les commentaires sur les versions du projet
+changelog: build
+    @echo -- changelog build $(BUILD)
+    @echo -e --\\n$(USER)@`hostname -s` --  build $(BUILD)  $(HOSTTYPE) --  `date` > $@.tmp
+    @if test -f $@; then cat $@ >> $@.tmp; fi
+    @mv $@.tmp $@
+
+
+annonce.version: annonce
+    @echo $< --  $(USER)  build $(BUILD)  --  `date` > $@
+
+annonce: $(AOBJ)
+    @echo -- build $(BUILD)
+    $(LD) $(LDFLAGS) -o $@ $+ $(LIB)
+
+#
+serveur_fichier.version: serveur_fichier
+    @echo $< --  $(USER)  build $(BUILD)  --  `date` > $@
+
+serveur_fichier: $(FOBJ)
+    @echo -- build $(BUILD)
+    $(LD) $(LDFLAGS) -o $@ $+ $(LIB)
+
+#
+client.version: client
+    @echo $< --  $(USER)  build $(BUILD)  --  `date` > $@
+
+client: $(COBJ)
+    @echo -- build $(BUILD)
+    $(LD) $(LDFLAGS) -o $@ $+ $(LIB)
+
+
+#
+%.o: %.c
+    $(CC) -o $@ -c $<
+
+%.d: %.c
+    $(CC) -MM -MD -o $@ $<
+
+
+.PHONY: clean
+clean: rebuild
+    rm -f $(BIN) $(OBJ) $(DEP) *.i *.s
+
+.PHONY: tarball
+tarball:
+    @echo -- build $(BUILD)
+    -tar -zcf annonce_b$(BUILD).tar.gz Makefile build changelog *.[ch]
+
+# inclusion des dependances
+-include $(DEP)
+
+# =================================== #
+# ========== OTHER EXAMPLE ========== #
+# =================================== #
+
+IDIR =../include
+CC=gcc
+CFLAGS=-I$(IDIR)
+
+ODIR=obj
+LDIR =../lib
+
+LIBS=-lm
+
+_DEPS = hellomake.h
+DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
+
+_OBJ = hellomake.o hellofunc.o 
+OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+
+
+$(ODIR)/%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+hellomake: $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+
+.PHONY: clean
+
+clean:
+	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ 
