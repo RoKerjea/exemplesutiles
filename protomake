@@ -1,0 +1,53 @@
+VPATH=./src:./src/include:./src/operacje:./src/reszta:./src/we_wy
+CFLAGS = -Wall
+CC = gcc
+INCLUDE = -I src/include
+NAME = macierze
+
+FILE_SOURCE := pliki.c wczytaj_plik.c wypisz_plik.c
+CONSOLE_SOURCE := wczytaj_konsola.c wypisz_konsola.c
+OTHER_SOURCE := suma.c roznica.c iloczyn.c macierz.c
+HEADERS := suma.h roznica.h iloczyn.h wypisz.h wczytaj.h macierz.h
+
+SRCS := $(FILE_SOURCE) $(CONSOLE_SOURCE) $(OTHER_SOURCE)
+OBJECTS:= $(SRCS:.c=.o)
+
+#FILE_OBJECTS := $(FILE_SOURCE:.c=.o)
+#CONSOLE_OBJECTS := $(CONSOLE_SOURCE:.c=.o)
+#OTHER_OBJECTS := $(OTHER_SOURCE:.c=.o)
+
+%.o: %.c %.h
+    gcc $(CFLAGS) $(INCLUDE) -c $?
+
+%.o: %.c
+    gcc $(CFLAGS) $(INCLUDE) -c $? -o $@
+
+
+finput: HEADERS+=pliki.h
+
+finput: $(FILE_OBJECTS) $(OTHER_OBJECTS) main.o
+    gcc $(CFLAGS) -o $(NAME) $^ -D WEWY_PLIKI
+
+main.o: main.c $(HEADERS)
+    gcc $(CFLAGS) $(INCLUDE) -c src/main.c
+
+clean: 
+    rm -rf *.o
+
+##########################################
+VPATH=./src:./not_libft
+
+SRCS		=	${addprefix PREFIX/, \
+				philomain.c \
+				parsing.c}
+
+OBJECTS	= ${SRCS:PREFIX/%.c=PREFIX/build/%.o}
+DEPEND	= ${SRCS:PREFIX/%.c=PREFIX/build/%.d}
+
+PREFIX/build/%.o :PREFIX/%.c
+    @if [ ! -d "./PREFIX/build" ]; then\
+		echo "${_BOLD}${_UNDER}${_BLUE}"mkdir -p PREFIX/build"${_END}";\
+		mkdir -p PREFIX/build;\
+	fi
+	@echo "${_BOLD}${_BLUE}"$(CC) -MMD -c $< -o $@"${_END}"
+	@$(CC) -MMD -c $< -o $@
